@@ -3913,6 +3913,7 @@ version = "0.0.0"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
+ "futures",
  "openshell-core",
  "ring",
  "serde",

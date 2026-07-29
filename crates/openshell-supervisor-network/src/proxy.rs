@@ -1549,7 +1549,7 @@ async fn handle_tcp_connection(
     // gate needs it) and drives the raw-tunnel branch below.
 
     // Build request-processing context shared by CONNECT and forward HTTP.
-    let ctx = relay::http_context(
+    let mut ctx = relay::http_context(
         &decision,
         provider_credentials,
         secret_resolver.clone(),
@@ -1609,6 +1609,7 @@ async fn handle_tcp_connection(
     if tunnel_protocol == TunnelProtocol::Tls {
         // TLS detected — terminate unconditionally.
         if let Some(ref tls) = tls_state {
+            ctx.request_default_port = Some(443);
             let tls_result = async {
                 let mut tls_client =
                     crate::l7::tls::tls_terminate_client(client, tls, &host_lc).await?;
@@ -1688,6 +1689,7 @@ async fn handle_tcp_connection(
         }
     } else if tunnel_protocol == TunnelProtocol::Http1 {
         // Plaintext HTTP detected.
+        ctx.request_default_port = Some(80);
         let is_l7_relay = l7_route.is_some_and(|route| !route.configs.is_empty());
         let Some(relay_context) = relay::prepare_http_relay(l7_route, &opa_engine, &decision, &ctx)
         else {
@@ -4336,7 +4338,7 @@ async fn handle_forward_proxy(
             crate::l7::rest::parse_query_params(query).unwrap_or_default()
         });
     let secret_resolver = prepared_target.secret_resolver;
-    let l7_ctx = relay::http_context(
+    let mut l7_ctx = relay::http_context(
         &decision,
         provider_credentials,
         secret_resolver.clone(),
@@ -4344,6 +4346,11 @@ async fn handle_forward_proxy(
         dynamic_credentials.clone(),
         agent_proposals,
     );
+    l7_ctx.request_default_port = match scheme.as_str() {
+        "http" => Some(80),
+        "https" => Some(443),
+        _ => None,
+    };
     if let Some(route) = decision
         .endpoint
         .l7_route

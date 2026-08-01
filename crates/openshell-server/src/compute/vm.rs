@@ -29,6 +29,7 @@
 //! trait implementation registering the VM driver against the generic
 //! interface.
 
+#[cfg(not(target_os = "windows"))]
 use super::AcquiredRemoteDriverEndpoint;
 #[cfg(unix)]
 use super::ManagedDriverProcess;
@@ -40,6 +41,7 @@ use openshell_core::ComputeDriverKind;
 use openshell_core::proto::compute::v1::{
     GetCapabilitiesRequest, compute_driver_client::ComputeDriverClient,
 };
+#[cfg(not(target_os = "windows"))]
 use openshell_core::{Config, Error, Result};
 #[cfg(unix)]
 use std::os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt};
@@ -526,19 +528,6 @@ pub async fn spawn(
     ))
 }
 
-#[cfg(target_os = "windows")]
-fn unsupported_vm_message() -> &'static str {
-    "VM compute driver is unsupported on Windows"
-}
-
-#[cfg(target_os = "windows")]
-pub async fn spawn(
-    _config: &Config,
-    _vm_config: &VmComputeConfig,
-) -> Result<AcquiredRemoteDriverEndpoint> {
-    Err(Error::config(unsupported_vm_message()))
-}
-
 #[cfg(all(not(unix), not(target_os = "windows")))]
 pub async fn spawn(
     _config: &Config,
@@ -888,13 +877,5 @@ mod tests {
 
         drop(listener);
         assert!(!socket_path.exists());
-    }
-}
-
-#[cfg(all(test, target_os = "windows"))]
-mod windows_tests {
-    #[test]
-    fn windows_spawn_reports_unsupported() {
-        assert!(super::unsupported_vm_message().contains("unsupported on Windows"));
     }
 }

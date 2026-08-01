@@ -6089,6 +6089,7 @@ network_policies:
         let ctx = crate::l7::relay::L7EvalContext {
             host: "api.example.test".into(),
             port: 80,
+            request_default_port: Some(80),
             policy_name: "jsonrpc_api".into(),
             binary_path: "/usr/bin/node".into(),
             ancestors: vec![],
@@ -6443,6 +6444,7 @@ network_policies:
         let ctx = crate::l7::relay::L7EvalContext {
             host: "api.example.test".into(),
             port: 8080,
+            request_default_port: Some(8080),
             policy_name: "rest_api".into(),
             binary_path: "/usr/bin/curl".into(),
             ancestors: vec![],
@@ -6504,6 +6506,7 @@ network_policies:
         let ctx = crate::l7::relay::L7EvalContext {
             host: host.to_string(),
             port,
+            request_default_port: Some(port),
             policy_name: policy_name.to_string(),
             binary_path: "/usr/bin/node".to_string(),
             ancestors: vec![],
@@ -6683,6 +6686,7 @@ network_policies:
         let ctx = crate::l7::relay::L7EvalContext {
             host: "gateway.example.test".to_string(),
             port: 80,
+            request_default_port: Some(80),
             policy_name: "ws_api".to_string(),
             binary_path: "/usr/bin/node".to_string(),
             ancestors: vec![],
@@ -6724,6 +6728,7 @@ network_policies:
         let ctx = crate::l7::relay::L7EvalContext {
             host: "gateway.example.test".to_string(),
             port: 80,
+            request_default_port: Some(80),
             policy_name: "rest_api".to_string(),
             binary_path: "/usr/bin/node".to_string(),
             ancestors: vec![],
@@ -9312,6 +9317,7 @@ network_policies:
         let ctx = crate::l7::relay::L7EvalContext {
             host: authority.into(),
             port: 80,
+            request_default_port: Some(80),
             policy_name: "test".into(),
             binary_path: "/usr/bin/node".into(),
             ancestors: vec![],

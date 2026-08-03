@@ -32,25 +32,19 @@ jobs:
       - name: Configure MinGW build tools
         shell: pwsh
         run: |
-          $gcc = Get-ChildItem `
-            -Path "$env:ChocolateyInstall\lib\mingw\tools" `
-            -Filter gcc.exe `
-            -File `
-            -Recurse | Where-Object {
-              $_.DirectoryName -like '*mingw64\bin'
-            } | Select-Object -First 1
+          $mingwBin = 'C:\mingw64\bin'
+          $gcc = Join-Path $mingwBin 'gcc.exe'
 
-          if (-not $gcc) {
+          if (-not (Test-Path $gcc)) {
             throw 'The GitHub Windows image does not contain the expected MinGW compiler.'
           }
 
-          $mingwBin = $gcc.DirectoryName
           $mingwBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          'CC=gcc' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          'CXX=g++' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          'MAKE=mingw32-make' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          'CC=C:/mingw64/bin/gcc.exe' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          'CXX=C:/mingw64/bin/g++.exe' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          'MAKE=C:/mingw64/bin/make.exe' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-          & $gcc.FullName --version
+          & $gcc --version
 
       - name: Show Rust environment
         shell: pwsh
@@ -59,7 +53,7 @@ jobs:
           cargo --version
           rustup show active-toolchain
           gcc --version
-          mingw32-make --version
+          make --version
 
       - name: Build workspace
         shell: pwsh

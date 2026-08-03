@@ -29,12 +29,37 @@ jobs:
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
+      - name: Configure MinGW build tools
+        shell: pwsh
+        run: |
+          $gcc = Get-ChildItem `
+            -Path "$env:ChocolateyInstall\lib\mingw\tools" `
+            -Filter gcc.exe `
+            -File `
+            -Recurse | Where-Object {
+              $_.DirectoryName -like '*mingw64\bin'
+            } | Select-Object -First 1
+
+          if (-not $gcc) {
+            throw 'The GitHub Windows image does not contain the expected MinGW compiler.'
+          }
+
+          $mingwBin = $gcc.DirectoryName
+          $mingwBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          'CC=gcc' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          'CXX=g++' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          'MAKE=mingw32-make' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          & $gcc.FullName --version
+
       - name: Show Rust environment
         shell: pwsh
         run: |
           rustc --version
           cargo --version
           rustup show active-toolchain
+          gcc --version
+          mingw32-make --version
 
       - name: Build workspace
         shell: pwsh

@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+name: Windows Build Experiment
+
+on:
+  push:
+    branches:
+      - codex/windows-ci-experiment
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_INCREMENTAL: "0"
+  CARGO_TERM_COLOR: always
+
+jobs:
+  windows-build:
+    name: Windows x64 build and unit tests
+    runs-on: windows-2025
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Show Rust environment
+        shell: pwsh
+        run: |
+          rustc --version
+          cargo --version
+          rustup show active-toolchain
+
+      - name: Build workspace
+        shell: pwsh
+        run: cargo build --workspace --locked
+
+      - name: Run workspace unit tests
+        shell: pwsh
+        run: cargo test --workspace --locked

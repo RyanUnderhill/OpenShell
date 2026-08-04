@@ -1,7 +1,10 @@
 name: Windows MSVC (build-only)
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - codex/windows-ci-pr2496
+  workflow_dispatch:
   pull_request:
 jobs:
   x64:

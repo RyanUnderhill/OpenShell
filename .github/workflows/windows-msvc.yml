@@ -7,6 +7,56 @@ on:
   workflow_dispatch:
   pull_request:
 jobs:
+  mxc-runner-probe:
+    name: NVIDIA managed Windows x64 MXC probe
+    runs-on: windows-amd64-cpu4
+    timeout-minutes: 10
+    steps:
+      - name: Inspect managed Windows runner
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $os = Get-CimInstance Win32_OperatingSystem
+          $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+          $principal = [Security.Principal.WindowsPrincipal]::new($identity)
+          $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+          Write-Host "OS: $($os.Caption)"
+          Write-Host "Version: $($os.Version)"
+          Write-Host "Build: $($os.BuildNumber)"
+          Write-Host "Architecture: $env:PROCESSOR_ARCHITECTURE"
+          Write-Host "Identity: $($identity.Name)"
+          Write-Host "Administrator: $isAdmin"
+
+          $containers = Get-WindowsOptionalFeature -Online -FeatureName Containers -ErrorAction SilentlyContinue
+          Write-Host "Containers feature: $($containers.State)"
+
+          $isoSessionPaths = @(
+            "$env:WINDIR\System32\IsoSessionApp.dll",
+            "$env:WINDIR\SysWOW64\IsoSessionApp.dll"
+          )
+          foreach ($path in $isoSessionPaths) {
+            Write-Host "IsoSessionApp candidate: $path (exists=$(Test-Path -LiteralPath $path))"
+          }
+
+          $wxcCandidates = @(
+            "C:\mxc\wxc-exec.exe",
+            "C:\mxc-kit\bin\wxc-exec.exe"
+          )
+          $wxcOnPath = Get-Command wxc-exec.exe -ErrorAction SilentlyContinue
+          if ($wxcOnPath) {
+            $wxcCandidates += $wxcOnPath.Source
+          }
+
+          $wxc = $wxcCandidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+          if ($wxc) {
+            Write-Host "wxc-exec: $wxc"
+            & $wxc --version
+          } else {
+            Write-Host "wxc-exec: not installed"
+          }
+
   x64:
     runs-on: windows-2025
     steps:
